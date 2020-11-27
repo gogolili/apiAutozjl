@@ -6,6 +6,7 @@ import org.testng.Assert;
 import utils.*;
 
 import java.io.File;
+import java.net.URLEncoder;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -53,8 +54,7 @@ public class TestBase {
             while (m.find()) {
                 String actualValue = JSONPath.read(sourchData, m.group(1)).toString();
                 String exceptValue = m.group(2);
-                ReportUtil.log(String.format("验证转换后的值%s=%s", actualValue,
-                        exceptValue));
+                ReportUtil.log(String.format("验证转换后的值%s=%s", actualValue,exceptValue));
                 Assert.assertEquals(actualValue, exceptValue, "验证预期结果失败。");
             }
         }
@@ -62,17 +62,12 @@ public class TestBase {
 
 
     /**
-     * 组件预参数（处理__fucn()以及${xxxx}）
+     * 组件预参数（处理__fucn()）
      *__fucn()中将（）内的参数返回
      * @param param
      * @return
      */
     protected String buildParam(String param) {
-        // 处理${}
-        param = getCommonParam(param);
-        // Pattern pattern = Pattern.compile("__(.*?)\\(.*\\)");// 取__开头的函数正则表达式
-        // Pattern pattern =
-        // Pattern.compile("__(\\w*?)\\((\\w*,)*(\\w*)*\\)");// 取__开头的函数正则表达式
         Matcher m = funPattern.matcher(param);
         while (m.find()) {
             String funcName = m.group(1);
@@ -180,7 +175,7 @@ public class TestBase {
 
 
     /**
-     * 对应excel的save列，将取出来的数据存入全局map，excel编写时将多个要存储的字段以；号形式分隔
+     * 对应excel的header列，将取出来的数据存入全局map的headers，excel编写时将多个要存储的字段以；号形式分隔
      * @param preHeader
      */
     protected Map<String,String> savePreheader(String preHeader) {

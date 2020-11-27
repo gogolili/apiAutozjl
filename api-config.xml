@@ -6,7 +6,8 @@
         <header name="content-type" value="application/json"></header>
     </headers>
     <params>
-    	<param name="test" value="value"></param>
+    	<param name="userAccount" value="cpy423"></param>
+        <param name="password" value="a123456."></param>
     </params>
     <project_name>接口自动化测试报告demo</project_name>
 </root>

@@ -126,46 +126,62 @@ public class ApiTest extends TestBase {
 			ReportUtil.log(String.format("暂停休眠 %s 秒",	apiDataBean.getSleep()));
 			Thread.sleep(apiDataBean.getSleep() * 1000);
 		}
-
 		Header[] apiHeader = buildRequestHeader(apiDataBean);
-
-
 		String apiParam = buildRequestParam(apiDataBean);
 		// 封装请求方法
 		HttpUriRequest method = parseHttpRequest(apiDataBean.getUrl(),apiDataBean.getMethod(),apiHeader, apiParam);
 
 		HttpResponse response = client.execute(method);
 		HttpEntity respEntity = response.getEntity();
-		String responseData = EntityUtils.toString(respEntity, "UTF-8");;
+		String responseData = EntityUtils.toString(respEntity, "UTF-8");
 		ReportUtil.log("接口返回:" + responseData);
 		// 验证预期信息
 		verifyResult(responseData, apiDataBean.getVerify(),apiDataBean.isContains());
-//============================================
-		String allSave = getCommonParam(apiDataBean.getSave());
+
+		//保存全局变量
+		buildSave(apiParam,responseData,apiDataBean.getSave());
+
+		ReportUtil.log("全局变量:" + saveDatas);
+	}
+
+
+	//格式化save，并储存全局map
+
+	/**
+	 *
+	 * @param requestJson 请求json
+	 * @param responseJson 返回json
+	 * @param allSave  获取到的save列数据
+	 * @return
+	 */
+	private void buildSave(String requestJson,String responseJson,String allSave) {
+		//先取json中的值，即先识别$.Response.和$.Request
 		String[] saves = allSave.split(";");
-		String key, value;
+		String key;
+		String value=null;
 
 		for (String save : saves) {
+			save = getCommonParam(save);
+			save = buildParam(save);
 			Pattern pattern = Pattern.compile("([^;=]*)=([^;]*)");
 			Matcher m = pattern.matcher(save.trim());
 			while (m.find()) {
 				key = m.group(1);// m.group(1)为等号前面的值，即要存储的key
-				if (m.group(2).startsWith("$.Response.")) {
-					value = JSONPath.read(responseData, "$." + m.group(2).substring(11)).toString();//m.group(2)为等号之后的值，即要提取的值
-				} else if (m.group(2).startsWith("$.Request")) {
-					value = JSONPath.read(apiParam, "$." + m.group(2).substring(10)).toString();
-
-				} else {
-					value = m.group(2);//如果没有找到$就将=后面的值全赋值
-				}
-				ReportUtil.log(String.format("存储公共参数   %s值为：%s.", key, value));
-				saveDatas.put(key, value);
+					try{
+						if (m.group(2).startsWith("$.Response.")) {
+							value = JSONPath.read(responseJson, "$." + m.group(2).substring(11)).toString();//m.group(2)为等号之后的值，即要提取的值
+						}else if (m.group(2).startsWith("$.Request")) {
+							value = JSONPath.read(requestJson, "$." + m.group(2).substring(10)).toString();
+						} else {
+							value = m.group(2);//如果没有找到$就将=后面的值全赋值
+						}
+						ReportUtil.log(String.format("存储公共参数   %s值为：%s.", key, value));
+						saveDatas.put(key, value);
+					}catch (Exception e){
+						e.printStackTrace();
+					}
 			}
 		}
-		//=================================================================
-
-
-		ReportUtil.log("全局变量:" + saveDatas);
 	}
 
 
@@ -179,8 +195,7 @@ public class ApiTest extends TestBase {
 	 */
 	private HttpEntity parseEntity(String param, boolean formData) throws UnsupportedEncodingException {
 		if (formData) {
-			Map<String, String> paramMap = JSON.parseObject(param,
-					HashMap.class);
+			Map<String, String> paramMap = JSON.parseObject(param,HashMap.class);
 			MultipartEntity multiEntity = new MultipartEntity();
 			for (String key : paramMap.keySet()) {
 				String value = paramMap.get(key);
@@ -208,6 +223,7 @@ public class ApiTest extends TestBase {
 	private String parseUrl(String shortUrl) {
 		// 替换url中的参数
 		shortUrl = getCommonParam(shortUrl);
+		shortUrl = buildParam(shortUrl);
 		if (shortUrl.startsWith("http")) {
 			return shortUrl;
 		}
@@ -221,13 +237,12 @@ public class ApiTest extends TestBase {
 		return rootUrl + shortUrl;
 	}
 
-	//格式化参数
+	//格式化请求参数
 	private String buildRequestParam(ApiDataBean apiDataBean) {
 		// 分析处理预参数 （函数生成的参数）
-		String preParam = buildParam(apiDataBean.getPreParam());
-		savePreParam(preParam);// 保存预存参数 用于后面接口参数中使用和接口返回验证中
+		String preParam = getCommonParam(apiDataBean.getParam());
 		// 处理参数
-		String apiParam = buildParam(apiDataBean.getParam());
+		String apiParam = buildParam(preParam);
 		return apiParam;
 	}
 

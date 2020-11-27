@@ -30,6 +30,6 @@ public class RandomStrArrFucntion implements Function {
 
     @Override
     public String getReferenceKey() {
-        return null;
+        return "randomStrArr";
     }
 }

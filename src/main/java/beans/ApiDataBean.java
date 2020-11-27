@@ -109,4 +109,9 @@ public class ApiDataBean extends BaseBean{
     public void setSleep(int sleep) {
         this.sleep = sleep;
     }
+
+    @Override
+    public String toString() {
+        return desc;
+    }
 }

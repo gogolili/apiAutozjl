@@ -20,6 +20,7 @@ public class FunctionUtil {
                     functionMap.put(referrncekey, tempFunc.getClass());
                 }
             } catch (Exception e) {
+                ReportUtil.log("============================");
                 e.printStackTrace();
             }
         }
@@ -31,6 +32,7 @@ public class FunctionUtil {
 
     public static String getValue(String functionName,String[] args){
         try {
+
             return functionMap.get(functionName).newInstance().execute(args);
         } catch (Exception e) {
             e.printStackTrace();
